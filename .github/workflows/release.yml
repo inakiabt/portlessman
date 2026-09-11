@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   publish:
@@ -69,10 +70,15 @@ jobs:
             build/Portlessman-${{ steps.ver.outputs.version }}.dmg
             build/Portlessman-${{ steps.ver.outputs.version }}.dmg.sha256
 
-      - name: Commit & Push Updated Cask Formula
+      - name: Open Pull Request for Cask Update
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          BRANCH="chore/bump-cask-${{ steps.ver.outputs.version }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
           git add Casks/portlessman.rb
-          git commit -m "chore(cask): bump version to ${{ steps.ver.outputs.version }}" || echo "No changes to commit"
-          git push origin HEAD:main || echo "Push skipped"
+          git commit -m "chore(cask): bump version to ${{ steps.ver.outputs.version }}" || exit 0
+          git push -u origin "$BRANCH" --force
+          gh pr create             --title "chore(cask): bump version to ${{ steps.ver.outputs.version }}"             --body "Automated Homebrew Cask formula update for release [${{ steps.ver.outputs.tag }}](https://github.com/${{ github.repository }}/releases/tag/${{ steps.ver.outputs.tag }})."             --base main             --head "$BRANCH" || echo "PR already created"
