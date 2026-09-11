@@ -6,6 +6,7 @@ enum ActiveTab: Equatable {
     case doctor
     case logs
     case settings
+    case routeDetail(PortlessRoute)
 }
 
 struct MenuContentView: View {
@@ -35,11 +36,16 @@ struct MenuContentView: View {
                         activeTab = .main
                     }
                 })
+            case .routeDetail(let route):
+                RouteDetailView(route: route, store: store, onBack: {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        activeTab = .main
+                    }
+                })
             }
         }
         .frame(width: 360)
         .background(
-            // Hidden buttons for keyboard shortcuts
             Group {
                 Button("") {
                     store.reload()
@@ -66,7 +72,7 @@ struct MenuContentView: View {
                 }
             }
 
-            // Status feedback toast banner (if any)
+            // Status feedback banner (if any)
             if let msg = store.statusMessage {
                 HStack(spacing: 6) {
                     Image(systemName: "info.circle.fill")
@@ -86,8 +92,12 @@ struct MenuContentView: View {
 
             Divider()
 
-            // Active Routes
-            RouteListView(store: store)
+            // Active Routes (with tap to drill down into detail)
+            RouteListView(store: store) { selectedRoute in
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    activeTab = .routeDetail(selectedRoute)
+                }
+            }
 
             Divider()
                 .padding(.horizontal, 14)

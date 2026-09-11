@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RouteListView: View {
     @ObservedObject var store: PortlessStore
+    let onSelectRoute: (PortlessRoute) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -55,14 +56,18 @@ struct RouteListView: View {
                 if store.activeAppRoutes.count <= 4 {
                     VStack(spacing: 4) {
                         ForEach(store.activeAppRoutes) { route in
-                            RouteRowView(route: route, store: store)
+                            RouteRowView(route: route, store: store) {
+                                onSelectRoute(route)
+                            }
                         }
                     }
                 } else {
                     ScrollView {
                         VStack(spacing: 4) {
                             ForEach(store.activeAppRoutes) { route in
-                                RouteRowView(route: route, store: store)
+                                RouteRowView(route: route, store: store) {
+                                    onSelectRoute(route)
+                                }
                             }
                         }
                     }
