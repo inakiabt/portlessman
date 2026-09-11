@@ -46,17 +46,20 @@ struct RouteDetailView: View {
             Divider()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 12) {
                     // Header Card: Hostname & URL
                     VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 6) {
+                        HStack(alignment: .top, spacing: 6) {
                             Circle()
                                 .fill(route.isAlive ? Color.green : Color.orange)
                                 .frame(width: 8, height: 8)
+                                .padding(.top, 3)
 
                             Text(route.hostname)
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundStyle(.primary)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
 
                             Spacer()
 
@@ -178,7 +181,7 @@ struct RouteDetailView: View {
 
                             // Quick Editor Buttons
                             HStack(spacing: 6) {
-                                ForEach(editorManager.installedEditors.prefix(3)) { editor in
+                                ForEach(editorManager.installedEditors.prefix(4)) { editor in
                                     Button {
                                         editorManager.openFolder(path: cwd, with: editor)
                                     } label: {
@@ -199,10 +202,8 @@ struct RouteDetailView: View {
                         }
                     }
 
-                    // Danger Zone / Process Termination
+                    // Process Actions (Kill Server)
                     if route.pid > 0 {
-                        Divider()
-
                         VStack(alignment: .leading, spacing: 6) {
                             Text("PROCESS ACTIONS")
                                 .font(.system(size: 10, weight: .bold))
@@ -232,9 +233,9 @@ struct RouteDetailView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 4)
             }
-            .frame(maxHeight: 330)
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, 6)
+        .frame(width: 380, height: route.cwd != nil ? 490 : 360)
     }
 
     private func detailRow(label: String, value: String) -> some View {

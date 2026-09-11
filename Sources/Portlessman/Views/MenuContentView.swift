@@ -18,33 +18,37 @@ struct MenuContentView: View {
             switch activeTab {
             case .main:
                 mainView
+                    .frame(width: 360)
             case .doctor:
                 DoctorModalView(onBack: {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         activeTab = .main
                     }
                 })
+                .frame(width: 360)
             case .logs:
                 LogsModalView(store: store, onBack: {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         activeTab = .main
                     }
                 })
+                .frame(width: 360)
             case .settings:
                 SettingsView(store: store, onBack: {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         activeTab = .main
                     }
                 })
+                .frame(width: 360)
             case .routeDetail(let route):
                 RouteDetailView(route: route, store: store, onBack: {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         activeTab = .main
                     }
                 })
+                .frame(width: 380, height: route.cwd != nil ? 490 : 360)
             }
         }
-        .frame(width: 360)
         .background(
             Group {
                 Button("") {
