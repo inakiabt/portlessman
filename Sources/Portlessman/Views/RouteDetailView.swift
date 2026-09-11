@@ -35,9 +35,29 @@ struct RouteDetailView: View {
 
                 Spacer()
 
-                // Spacer to balance the back button
-                Color.clear
-                    .frame(width: 44, height: 16)
+                if route.pid > 0 {
+                    Button {
+                        store.killProcess(for: route)
+                        onBack()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "stop.circle.fill")
+                                .font(.system(size: 10))
+                            Text("Kill")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.red.opacity(0.12))
+                        .foregroundStyle(Color.red)
+                        .cornerRadius(5)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Kill process (PID \(route.pidString))")
+                } else {
+                    Color.clear
+                        .frame(width: 44, height: 16)
+                }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
@@ -194,34 +214,6 @@ struct RouteDetailView: View {
                                 OpenInEditorMenu(path: cwd)
                                 Spacer()
                             }
-                        }
-                    }
-
-                    // Process Actions (Kill Server)
-                    if route.pid > 0 {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("PROCESS ACTIONS")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.secondary)
-
-                            Button {
-                                store.killProcess(for: route)
-                                onBack()
-                            } label: {
-                                HStack(spacing: 5) {
-                                    Image(systemName: "stop.circle.fill")
-                                        .font(.system(size: 11))
-                                    Text("Terminate Process (PID \(route.pidString))")
-                                        .font(.system(size: 11, weight: .medium))
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 7)
-                                .frame(maxWidth: .infinity)
-                                .background(Color.red.opacity(0.09))
-                                .foregroundStyle(Color.red)
-                                .cornerRadius(6)
-                            }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
