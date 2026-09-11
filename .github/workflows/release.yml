@@ -53,18 +53,7 @@ jobs:
           echo "dmg_sha=${DMG_SHA}" >> $GITHUB_OUTPUT
 
       - name: Update Homebrew Cask Formula
-        run: |
-          python3 -c "
-          cask_path = 'Casks/portlessman.rb'
-          with open(cask_path, 'r') as f:
-              content = f.read()
-          import re
-          content = re.sub(r'version "[^"]+"', 'version "${{ steps.ver.outputs.version }}"', content)
-          content = re.sub(r'sha256 "[^"]+"', 'sha256 "${{ steps.checksum.outputs.zip_sha }}"', content)
-          with open(cask_path, 'w') as f:
-              f.write(content)
-          print('Updated Casks/portlessman.rb')
-          "
+        run: ./scripts/update_cask.py "${{ steps.ver.outputs.version }}" "${{ steps.checksum.outputs.zip_sha }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
