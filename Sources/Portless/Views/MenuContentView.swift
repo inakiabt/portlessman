@@ -38,6 +38,23 @@ struct MenuContentView: View {
             }
         }
         .frame(width: 360)
+        .background(
+            // Hidden buttons for keyboard shortcuts
+            Group {
+                Button("") {
+                    store.reload()
+                }
+                .keyboardShortcut("r", modifiers: .command)
+
+                Button("") {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        activeTab = (activeTab == .settings) ? .main : .settings
+                    }
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
+            .opacity(0)
+        )
     }
 
     private var mainView: some View {
@@ -47,6 +64,24 @@ struct MenuContentView: View {
                 withAnimation(.easeInOut(duration: 0.15)) {
                     activeTab = .settings
                 }
+            }
+
+            // Status feedback toast banner (if any)
+            if let msg = store.statusMessage {
+                HStack(spacing: 6) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.blue)
+                    Text(msg)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color.primary)
+                        .lineLimit(1)
+                    Spacer()
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 4)
+                .background(Color.blue.opacity(0.08))
+                .transition(.opacity)
             }
 
             Divider()

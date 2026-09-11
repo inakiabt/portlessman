@@ -27,61 +27,86 @@ public final class PortlessWatcher: @unchecked Sendable {
         stopWatching()
 
         // 1. Watch directory for file creations/deletions/renames
-        dirFd = open(stateDir.path, O_EVTONLY)
-        if dirFd >= 0 {
-            let src = DispatchSource.makeFileSystemObjectSource(
-                fileDescriptor: dirFd,
-                eventMask: [.write, .link, .rename, .revoke],
-                queue: .main
-            )
-            src.setEventHandler { [weak self] in
-                self?.scheduleTrigger()
-                // Re-arm file watch if needed
-                self?.rearmFileWatch()
-            }
-            src.resume()
-            self.dirSource = src
-        }
+        openDirectoryWatch()
 
         // 2. Watch routes.json directly for modifications
         rearmFileWatch()
 
         // 3. Fallback heartbeat every 3 seconds to guarantee freshness
-        DispatchQueue.main.async { [weak self] in
-            self?.pollTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
-                self?.onChange()
+        if Thread.isMainThread {
+            self.pollTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+                self?.pollTick()
+            }
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.pollTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+                    self?.pollTick()
+                }
             }
         }
     }
 
-    private func rearmFileWatch() {
-        fileSource?.cancel()
-        if fileFd >= 0 {
-            close(fileFd)
-            fileFd = -1
+    private func pollTick() {
+        // If directory watch was not opened (e.g. folder did not exist yet), try to open it
+        if dirSource == nil {
+            openDirectoryWatch()
         }
+        if fileSource == nil && FileManager.default.fileExists(atPath: routesFile.path) {
+            rearmFileWatch()
+        }
+        onChange()
+    }
 
-        if FileManager.default.fileExists(atPath: routesFile.path) {
-            fileFd = open(routesFile.path, O_EVTONLY)
-            if fileFd >= 0 {
-                let src = DispatchSource.makeFileSystemObjectSource(
-                    fileDescriptor: fileFd,
-                    eventMask: [.write, .delete, .rename, .extend, .attrib],
-                    queue: .main
-                )
-                src.setEventHandler { [weak self] in
-                    self?.scheduleTrigger()
-                }
-                src.setCancelHandler { [weak self] in
-                    if let fd = self?.fileFd, fd >= 0 {
-                        close(fd)
-                        self?.fileFd = -1
-                    }
-                }
-                src.resume()
-                self.fileSource = src
-            }
+    private func openDirectoryWatch() {
+        guard dirSource == nil else { return }
+        guard FileManager.default.fileExists(atPath: stateDir.path) else { return }
+
+        let fd = open(stateDir.path, O_EVTONLY)
+        guard fd >= 0 else { return }
+        self.dirFd = fd
+
+        let src = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fd,
+            eventMask: [.write, .link, .rename, .revoke],
+            queue: .main
+        )
+        src.setEventHandler { [weak self] in
+            self?.scheduleTrigger()
+            self?.rearmFileWatch()
         }
+        src.setCancelHandler { [fd] in
+            close(fd)
+        }
+        src.resume()
+        self.dirSource = src
+    }
+
+    private func rearmFileWatch() {
+        if let existing = fileSource {
+            fileSource = nil
+            existing.cancel() // cancel handler will close the associated fd
+        }
+        fileFd = -1
+
+        guard FileManager.default.fileExists(atPath: routesFile.path) else { return }
+
+        let fd = open(routesFile.path, O_EVTONLY)
+        guard fd >= 0 else { return }
+        self.fileFd = fd
+
+        let src = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fd,
+            eventMask: [.write, .delete, .rename, .extend, .attrib],
+            queue: .main
+        )
+        src.setEventHandler { [weak self] in
+            self?.scheduleTrigger()
+        }
+        src.setCancelHandler { [fd] in
+            close(fd)
+        }
+        src.resume()
+        self.fileSource = src
     }
 
     private func scheduleTrigger() {
@@ -92,11 +117,30 @@ public final class PortlessWatcher: @unchecked Sendable {
     }
 
     public func stopWatching() {
-        dirSource?.cancel()
-        fileSource?.cancel()
-        if dirFd >= 0 { close(dirFd); dirFd = -1 }
-        if fileFd >= 0 { close(fileFd); fileFd = -1 }
-        debounceTimer?.invalidate()
-        pollTimer?.invalidate()
+        if Thread.isMainThread {
+            debounceTimer?.invalidate()
+            debounceTimer = nil
+            pollTimer?.invalidate()
+            pollTimer = nil
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.debounceTimer?.invalidate()
+                self?.debounceTimer = nil
+                self?.pollTimer?.invalidate()
+                self?.pollTimer = nil
+            }
+        }
+
+        if let d = dirSource {
+            dirSource = nil
+            d.cancel()
+        }
+        dirFd = -1
+
+        if let f = fileSource {
+            fileSource = nil
+            f.cancel()
+        }
+        fileFd = -1
     }
 }

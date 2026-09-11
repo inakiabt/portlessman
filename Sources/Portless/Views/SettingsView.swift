@@ -39,7 +39,7 @@ struct SettingsView: View {
 
                 Spacer()
 
-                // Spacer to balance the back button width
+                // Balance space with invisible text
                 Text("Back")
                     .font(.system(size: 12))
                     .opacity(0)
@@ -153,6 +153,7 @@ struct SettingsView: View {
     }
 
     private func toggleService(install: Bool) {
+        guard !isBusy else { return }
         isBusy = true
         Task {
             do {
@@ -165,6 +166,8 @@ struct SettingsView: View {
                 }
             } catch {
                 feedbackMessage = "Service error: \(error.localizedDescription)"
+                // Revert state if failed
+                self.isServiceInstalled = !install
             }
             isBusy = false
             checkServiceStatus()
@@ -172,6 +175,7 @@ struct SettingsView: View {
     }
 
     private func toggleLAN(enabled: Bool) {
+        guard !isBusy else { return }
         isBusy = true
         Task {
             do {
@@ -180,12 +184,14 @@ struct SettingsView: View {
                 store.reload()
             } catch {
                 feedbackMessage = "LAN error: \(error.localizedDescription)"
+                self.isLANMode = !enabled
             }
             isBusy = false
         }
     }
 
     private func runHostsSync() {
+        guard !isBusy else { return }
         isBusy = true
         Task {
             do {
@@ -199,6 +205,7 @@ struct SettingsView: View {
     }
 
     private func runTrustCA() {
+        guard !isBusy else { return }
         isBusy = true
         Task {
             do {

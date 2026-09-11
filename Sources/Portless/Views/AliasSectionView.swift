@@ -18,7 +18,7 @@ struct AliasSectionView: View {
 
                 if !isAdding {
                     Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        withAnimation(.easeInOut(duration: 0.15)) {
                             isAdding = true
                             errorMessage = nil
                         }
@@ -85,7 +85,7 @@ struct AliasSectionView: View {
 
             // Inline Add Form
             if isAdding {
-                VStack(spacing: 6) {
+                VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 6) {
                         TextField("Name (e.g. redis)", text: $aliasName)
                             .textFieldStyle(.roundedBorder)
@@ -95,6 +95,9 @@ struct AliasSectionView: View {
                             .textFieldStyle(.roundedBorder)
                             .font(.system(size: 11))
                             .frame(width: 65)
+                            .onSubmit {
+                                submitAlias()
+                            }
 
                         Button("Add") {
                             submitAlias()
@@ -104,7 +107,7 @@ struct AliasSectionView: View {
                         .disabled(aliasName.isEmpty || aliasPort.isEmpty)
 
                         Button("Cancel") {
-                            withAnimation {
+                            withAnimation(.easeInOut(duration: 0.15)) {
                                 isAdding = false
                                 aliasName = ""
                                 aliasPort = ""
@@ -126,7 +129,7 @@ struct AliasSectionView: View {
                 .padding(.vertical, 6)
             } else if store.staticAliases.isEmpty {
                 Button {
-                    withAnimation {
+                    withAnimation(.easeInOut(duration: 0.15)) {
                         isAdding = true
                     }
                 } label: {
@@ -146,21 +149,29 @@ struct AliasSectionView: View {
     }
 
     private func submitAlias() {
-        guard let portNumber = Int(aliasPort), portNumber > 0, portNumber < 65536 else {
-            errorMessage = "Invalid port number"
+        let cleanName = aliasName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !cleanName.isEmpty else {
+            errorMessage = "Alias name cannot be empty"
             return
         }
 
-        let cleanName = aliasName.trimmingCharacters(in: .whitespaces)
-        guard !cleanName.isEmpty else {
-            errorMessage = "Alias name cannot be empty"
+        // Validate DNS name format
+        let dnsRegex = "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+        if cleanName.range(of: dnsRegex, options: .regularExpression) == nil {
+            errorMessage = "Name must be alphanumeric with optional hyphens (e.g. 'my-api')"
+            return
+        }
+
+        guard let portNumber = Int(aliasPort.trimmingCharacters(in: .whitespacesAndNewlines)),
+              portNumber > 0 && portNumber < 65536 else {
+            errorMessage = "Port must be between 1 and 65535"
             return
         }
 
         Task {
             do {
                 try await store.addAlias(name: cleanName, port: portNumber)
-                withAnimation {
+                withAnimation(.easeInOut(duration: 0.15)) {
                     isAdding = false
                     aliasName = ""
                     aliasPort = ""

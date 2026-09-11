@@ -22,6 +22,7 @@ public final class PortlessStore: ObservableObject {
     private let proxyLogFile: URL
 
     private var watcher: PortlessWatcher?
+    private var statusMessageTimer: Timer?
 
     public init() {
         let home = FileManager.default.homeDirectoryForCurrentUser
@@ -61,6 +62,16 @@ public final class PortlessStore: ObservableObject {
 
     public var staticAliases: [PortlessRoute] {
         filteredRoutes.filter { $0.isStaticAlias }
+    }
+
+    public func setStatus(_ msg: String) {
+        statusMessage = msg
+        statusMessageTimer?.invalidate()
+        statusMessageTimer = Timer.scheduledTimer(withTimeInterval: 3.5, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.statusMessage = nil
+            }
+        }
     }
 
     public func reload() {
@@ -104,7 +115,7 @@ public final class PortlessStore: ObservableObject {
 
         self.routes = initialRoutes.sorted { $0.hostname < $1.hostname }
 
-        // 2. Check proxy state via PID and TCP socket
+        // 2. Check proxy state via PID and socket
         let pid = readProxyPid()
         let isPidAlive = pid != nil && ProcessManager.shared.isAlive(pid: pid!)
         let isPortAlive = checkPortResponding(port: port)
@@ -149,11 +160,28 @@ public final class PortlessStore: ObservableObject {
         guard sock >= 0 else { return false }
         defer { close(sock) }
 
-        var tv = timeval(tv_sec: 0, tv_usec: 250_000)
-        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
-        setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+        // Set non-blocking socket
+        let flags = fcntl(sock, F_GETFL, 0)
+        _ = fcntl(sock, F_SETFL, flags | O_NONBLOCK)
 
-        return connect(sock, info.pointee.ai_addr, info.pointee.ai_addrlen) == 0
+        let connRes = connect(sock, info.pointee.ai_addr, info.pointee.ai_addrlen)
+        if connRes == 0 {
+            return true
+        }
+
+        if errno == EINPROGRESS {
+            var pollFd = pollfd(fd: sock, events: Int16(POLLOUT), revents: 0)
+            let pollRes = poll(&pollFd, 1, 60) // 60ms timeout maximum
+            if pollRes > 0 && (pollFd.revents & Int16(POLLOUT)) != 0 {
+                var err: Int32 = 0
+                var errLen = socklen_t(MemoryLayout<Int32>.size)
+                if getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errLen) == 0 && err == 0 {
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 
     private func loadRawRouteEntries() -> [RouteEntry] {
@@ -195,13 +223,15 @@ public final class PortlessStore: ObservableObject {
             do {
                 if proxyStatus.isRunning {
                     try await PortlessCLI.shared.stopProxy()
+                    setStatus("Stopped Portless proxy")
                 } else {
                     try await PortlessCLI.shared.startProxy()
+                    setStatus("Started Portless proxy")
                 }
                 try await Task.sleep(nanoseconds: 600_000_000)
                 reload()
             } catch {
-                statusMessage = "Proxy error: \(error.localizedDescription)"
+                setStatus("Proxy error: \(error.localizedDescription)")
             }
         }
     }
@@ -213,8 +243,9 @@ public final class PortlessStore: ObservableObject {
             do {
                 try await PortlessCLI.shared.restartProxy()
                 reload()
+                setStatus("Restarted proxy")
             } catch {
-                statusMessage = "Restart failed: \(error.localizedDescription)"
+                setStatus("Restart failed: \(error.localizedDescription)")
             }
         }
     }
@@ -226,9 +257,9 @@ public final class PortlessStore: ObservableObject {
             do {
                 let msg = try await PortlessCLI.shared.pruneOrphans()
                 reload()
-                statusMessage = msg.isEmpty ? "Pruned stale routes" : msg
+                setStatus(msg.isEmpty ? "Pruned stale routes" : msg)
             } catch {
-                statusMessage = "Prune failed: \(error.localizedDescription)"
+                setStatus("Prune failed: \(error.localizedDescription)")
             }
         }
     }
@@ -237,10 +268,12 @@ public final class PortlessStore: ObservableObject {
         guard route.pid > 0 else { return }
         let killed = ProcessManager.shared.killProcess(pid: route.pid)
         if killed {
-            statusMessage = "Stopped process for \(route.hostname)"
+            setStatus("Stopped process for \(route.hostname)")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                 self?.reload()
             }
+        } else {
+            setStatus("Could not kill PID \(route.pid) (Permission denied)")
         }
     }
 
@@ -248,12 +281,14 @@ public final class PortlessStore: ObservableObject {
         try await PortlessCLI.shared.addAlias(name: name, port: port)
         try await Task.sleep(nanoseconds: 300_000_000)
         reload()
+        setStatus("Added alias \(name) -> :\(port)")
     }
 
     public func removeAlias(name: String) async throws {
         try await PortlessCLI.shared.removeAlias(name: name)
         try await Task.sleep(nanoseconds: 300_000_000)
         reload()
+        setStatus("Removed alias \(name)")
     }
 
     public func getProxyLogs(maxLines: Int = 150) -> String {

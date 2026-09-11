@@ -76,7 +76,7 @@ public final class ProcessManager: @unchecked Sendable {
         guard pid > 0 else { return false }
         let signal = force ? SIGKILL : SIGTERM
         let res = kill(Int32(pid), signal)
-        if res == 0 || errno == EPERM {
+        if res == 0 {
             queue.async { [weak self] in
                 self?.cwdCache.removeValue(forKey: pid)
             }
@@ -89,6 +89,7 @@ public final class ProcessManager: @unchecked Sendable {
         guard pid > 0 else { return false }
         let ret = kill(Int32(pid), 0)
         if ret == 0 { return true }
+        // If errno is EPERM (operation not permitted), the process exists and is owned by root/another user
         return errno == EPERM
     }
 }
