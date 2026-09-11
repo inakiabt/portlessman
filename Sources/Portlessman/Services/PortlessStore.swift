@@ -37,7 +37,7 @@ public final class PortlessStore: ObservableObject {
         self.reload()
 
         self.watcher = PortlessWatcher { [weak self] in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.reload()
             }
         }
@@ -68,7 +68,7 @@ public final class PortlessStore: ObservableObject {
         statusMessage = msg
         statusMessageTimer?.invalidate()
         statusMessageTimer = Timer.scheduledTimer(withTimeInterval: 3.5, repeats: false) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.statusMessage = nil
             }
         }
@@ -132,7 +132,7 @@ public final class PortlessStore: ObservableObject {
         // 3. Resolve any uncached cwds in the background
         if !pidsToResolve.isEmpty {
             ProcessManager.shared.resolveCwdAsync(forPids: pidsToResolve) { [weak self] resolvedMap in
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     guard let self = self, !resolvedMap.isEmpty else { return }
                     self.routes = self.routes.map { r in
                         if let newCwd = resolvedMap[r.pid] {
