@@ -62,23 +62,52 @@ A lightweight, native macOS menu bar application built with Swift and SwiftUI to
 
 ---
 
-## Build & Installation
+## Installation
+
+### Via Homebrew (Recommended)
+You can install Portlessman directly using Homebrew Cask:
+
+```bash
+brew tap inakiabt/portlessman
+brew install --cask portlessman
+```
+
+Or in a single command:
+```bash
+brew install --cask inakiabt/portlessman/portlessman
+```
+
+To update in the future:
+```bash
+brew upgrade portlessman
+```
+
+### Manual Download (GitHub Releases)
+1. Download the latest `Portlessman-vX.Y.Z.dmg` or `.zip` from the [Releases](https://github.com/inakiabt/portlessman/releases) page.
+2. Drag `Portlessman.app` into your `/Applications` folder.
+
+---
+
+## Build & Installation from Source
 
 ### Quick Build & Run
 ```bash
 make run
 ```
 
-### Install to `/Applications`
+### Run Unit Tests
 ```bash
-make install
+make test
 ```
 
-### Build Only
+### Package DMG & ZIP
 ```bash
-make build
-# The standalone application bundle is generated at:
-# build/Portlessman.app
+make package
+```
+
+### Install Locally to `/Applications`
+```bash
+make install
 ```
 
 ---

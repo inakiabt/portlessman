@@ -18,6 +18,11 @@ let package = Package(
             name: "Portlessman",
             dependencies: [],
             path: "Sources/Portlessman"
+        ),
+        .testTarget(
+            name: "PortlessmanTests",
+            dependencies: ["Portlessman"],
+            path: "Tests/PortlessmanTests"
         )
     ]
 )
