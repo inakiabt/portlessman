@@ -23,12 +23,8 @@ struct RouteDetailView: View {
                         Text("Back")
                             .font(.system(size: 12, weight: .medium))
                     }
-                    .foregroundStyle(.secondary)
-                    .padding(.vertical, 4)
-                    .padding(.trailing, 8)
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(NavigationBackButtonStyle())
 
                 Spacer()
 
@@ -49,13 +45,8 @@ struct RouteDetailView: View {
                             Text("Kill")
                                 .font(.system(size: 11, weight: .semibold))
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.red.opacity(0.12))
-                        .foregroundStyle(Color.red)
-                        .cornerRadius(5)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(DestructivePillButtonStyle())
                     .help("Kill process (PID \(route.pidString))")
                 } else {
                     Color.clear
@@ -113,12 +104,8 @@ struct RouteDetailView: View {
                                         Text(copiedUrlFeedback ? "Copied" : "Copy")
                                             .font(.system(size: 10))
                                     }
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 3)
-                                    .background(Color.primary.opacity(0.06))
-                                    .cornerRadius(4)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(ActionPillButtonStyle())
 
                                 Button {
                                     if let url = URL(string: route.url) {
@@ -131,13 +118,8 @@ struct RouteDetailView: View {
                                         Text("Open")
                                             .font(.system(size: 10, weight: .semibold))
                                     }
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 3)
-                                    .background(Color.blue)
-                                    .foregroundStyle(.white)
-                                    .cornerRadius(4)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(PrimaryPillButtonStyle())
                             }
                         }
                     }
@@ -193,9 +175,8 @@ struct RouteDetailView: View {
                                         Text(copiedPathFeedback ? "Copied" : "Copy Path")
                                             .font(.system(size: 10))
                                     }
-                                    .foregroundStyle(.secondary)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(FooterLinkButtonStyle())
                             }
 
                             // Full-width path box

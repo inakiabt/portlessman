@@ -23,12 +23,8 @@ struct RouteListView: View {
                         Text("Prune")
                             .font(.system(size: 10, weight: .medium))
                     }
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.primary.opacity(0.05))
-                    .cornerRadius(4)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ActionPillButtonStyle())
                 .disabled(store.isBusy)
                 .help("Kill orphaned dev servers from crashed sessions")
             }

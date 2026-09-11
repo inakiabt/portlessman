@@ -237,11 +237,8 @@ struct MenuContentView: View {
                             .font(.system(size: 9))
                             .foregroundStyle(.tertiary)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MenuRowButtonStyle())
 
                 // Proxy Logs Button
                 Button {
@@ -261,11 +258,8 @@ struct MenuContentView: View {
                             .font(.system(size: 9))
                             .foregroundStyle(.tertiary)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MenuRowButtonStyle())
 
                 Divider()
                     .padding(.vertical, 2)
@@ -283,9 +277,8 @@ struct MenuContentView: View {
                             Text("Preferences...")
                                 .font(.system(size: 11))
                         }
-                        .foregroundStyle(.secondary)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(FooterLinkButtonStyle())
 
                     Spacer()
 
@@ -294,9 +287,8 @@ struct MenuContentView: View {
                     } label: {
                         Text("Quit")
                             .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(FooterLinkButtonStyle())
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 6)

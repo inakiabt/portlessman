@@ -19,12 +19,8 @@ struct DoctorModalView: View {
                         Text("Back")
                             .font(.system(size: 12))
                     }
-                    .foregroundStyle(.secondary)
-                    .padding(.vertical, 4)
-                    .padding(.trailing, 8)
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(NavigationBackButtonStyle())
                 .keyboardShortcut(.cancelAction)
 
                 Spacer()
