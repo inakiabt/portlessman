@@ -9,6 +9,80 @@ enum ActiveTab: Equatable {
     case routeDetail(PortlessRoute)
 }
 
+struct WindowVisibilityTracker: NSViewRepresentable {
+    let onDismiss: () -> Void
+
+    func makeNSView(context: Context) -> WindowTrackerNSView {
+        let view = WindowTrackerNSView()
+        view.onDismiss = onDismiss
+        return view
+    }
+
+    func updateNSView(_ nsView: WindowTrackerNSView, context: Context) {
+        nsView.onDismiss = onDismiss
+    }
+}
+
+final class WindowTrackerNSView: NSView {
+    var onDismiss: (() -> Void)?
+    private var observers: [NSObjectProtocol] = []
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        clearObservers()
+
+        guard let window = self.window else { return }
+
+        // 1. When the user clicks outside the popover window
+        let o1 = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            self?.notifyDismiss()
+        }
+
+        // 2. When the popover orders out or becomes occluded
+        let o2 = NotificationCenter.default.addObserver(
+            forName: NSWindow.didChangeOcclusionStateNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            if let win = self?.window, !win.occlusionState.contains(.visible) {
+                self?.notifyDismiss()
+            }
+        }
+
+        // 3. When the window will close
+        let o3 = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            self?.notifyDismiss()
+        }
+
+        observers = [o1, o2, o3]
+    }
+
+    private func notifyDismiss() {
+        DispatchQueue.main.async { [weak self] in
+            self?.onDismiss?()
+        }
+    }
+
+    private func clearObservers() {
+        for obs in observers {
+            NotificationCenter.default.removeObserver(obs)
+        }
+        observers.removeAll()
+    }
+
+    deinit {
+        clearObservers()
+    }
+}
+
 struct MenuContentView: View {
     @ObservedObject var store = PortlessStore.shared
     @State private var activeTab: ActiveTab = .main
@@ -65,9 +139,11 @@ struct MenuContentView: View {
             }
             .opacity(0)
         )
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
-            activeTab = .main
-        }
+        .background(
+            WindowVisibilityTracker {
+                activeTab = .main
+            }
+        )
     }
 
     private var mainView: some View {

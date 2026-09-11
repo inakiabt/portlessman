@@ -169,20 +169,25 @@ struct RouteDetailView: View {
                             .buttonStyle(.plain)
                         }
 
-                        Text(cwd)
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(.primary)
-                            .padding(8)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.primary.opacity(0.04))
-                            .cornerRadius(6)
-                            .textSelection(.enabled)
+                        // Combined Path Box with Open in Editor button on the right
+                        HStack(spacing: 8) {
+                            Text(cwd)
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .textSelection(.enabled)
+                                .help(cwd)
 
-                        // Split Editor Button: 1-click default, attached arrow for picker
-                        HStack {
+                            Spacer(minLength: 4)
+
                             OpenInEditorMenu(path: cwd)
-                            Spacer()
                         }
+                        .padding(.leading, 8)
+                        .padding(.trailing, 4)
+                        .padding(.vertical, 4)
+                        .background(Color.primary.opacity(0.04))
+                        .cornerRadius(6)
                     }
                 }
 
