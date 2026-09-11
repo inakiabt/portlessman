@@ -1,6 +1,6 @@
 cask "portlessman" do
-  version "1.0.0"
-  sha256 "dfbbe271e4661829c084025c697549657cf2ec5a0822cd91e99248c309791d17"
+  version "1.0.1"
+  sha256 "7adbd2422bb4d801903e06b04a6e8c857724a1479689c0d472731d246a3270e2"
 
   url "https://github.com/inakiabt/portlessman/releases/download/v#{version}/Portlessman-#{version}.zip"
   name "Portlessman"
