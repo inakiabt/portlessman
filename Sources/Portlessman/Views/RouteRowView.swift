@@ -11,30 +11,28 @@ struct RouteRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             // Top Row: Status Dot, Hostname, and Drill-down Chevron
-            Button {
-                onSelect()
-            } label: {
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(route.isAlive ? Color.green : Color.orange)
-                        .frame(width: 7, height: 7)
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(route.isAlive ? Color.green : Color.orange)
+                    .frame(width: 7, height: 7)
 
-                    Text(route.hostname)
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
+                Text(route.hostname)
+                    .font(.system(size: 12.5, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
 
-                    Spacer()
+                Spacer()
 
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(.tertiary)
-                }
-                .contentShape(Rectangle())
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.tertiary)
             }
-            .buttonStyle(.plain)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onSelect()
+            }
 
-            // Bottom Row: Primary Actions (Open, Editor, Copy URL)
+            // Bottom Row: Primary Actions (Open, Editor, Copy URL) + Clickable empty area
             HStack(spacing: 6) {
                 // Open in Browser
                 Button {
@@ -49,14 +47,14 @@ struct RouteRowView: View {
                             .font(.system(size: 11, weight: .medium))
                     }
                     .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
+                    .padding(.vertical, 3.5)
                     .background(Color.primary.opacity(0.06))
                     .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
                 .help("Open in default browser")
 
-                // Open in Editor (if directory exists)
+                // Open in Editor (Split Button: 1-click default, arrow for picker)
                 if let cwd = route.cwd, !cwd.isEmpty {
                     OpenInEditorMenu(path: cwd)
                 }
@@ -78,18 +76,28 @@ struct RouteRowView: View {
                             .font(.system(size: 11, weight: .medium))
                     }
                     .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
+                    .padding(.vertical, 3.5)
                     .background(Color.primary.opacity(0.06))
                     .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
                 .help("Copy URL to clipboard")
 
-                Spacer()
+                // Empty space in button bar also opens the detail
+                Spacer(minLength: 8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        onSelect()
+                    }
             }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onSelect()
+        }
         .background(
             RoundedRectangle(cornerRadius: 7)
                 .fill(isHovered ? Color.primary.opacity(0.05) : Color.primary.opacity(0.02))

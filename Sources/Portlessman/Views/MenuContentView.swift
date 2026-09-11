@@ -46,7 +46,7 @@ struct MenuContentView: View {
                         activeTab = .main
                     }
                 })
-                .frame(width: 380, height: route.cwd != nil ? 490 : 360)
+                .frame(width: 380)
             }
         }
         .background(
