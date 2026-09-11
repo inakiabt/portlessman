@@ -20,10 +20,20 @@ struct OpenInEditorMenu: View {
                 }
             } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: currentEditor?.iconSystemName ?? "folder")
-                        .font(.system(size: 10))
+                    if let icon = currentEditor?.appIcon {
+                        Image(nsImage: icon)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 14, height: 14)
+                    } else {
+                        Image(systemName: currentEditor?.iconSystemName ?? "folder")
+                            .font(.system(size: 10))
+                    }
+
                     Text(currentEditor?.name ?? "Editor")
                         .font(.system(size: 11, weight: .medium))
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: true)
                 }
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3.5)
@@ -45,11 +55,14 @@ struct OpenInEditorMenu: View {
                         Button {
                             editorManager.openFolder(path: path, with: editor)
                         } label: {
-                            HStack {
-                                Text(editor.name)
-                                if editor.bundleId == currentEditor?.bundleId {
-                                    Text("✓ (Default)")
+                            if let icon = editor.appIcon {
+                                Label {
+                                    Text(editor.name + (editor.bundleId == currentEditor?.bundleId ? " ✓ (Default)" : ""))
+                                } icon: {
+                                    Image(nsImage: icon)
                                 }
+                            } else {
+                                Label(editor.name + (editor.bundleId == currentEditor?.bundleId ? " ✓ (Default)" : ""), systemImage: editor.iconSystemName)
                             }
                         }
                     }
@@ -59,8 +72,18 @@ struct OpenInEditorMenu: View {
 
                 Menu("Set Default Editor") {
                     ForEach(editorManager.installedEditors.filter { !$0.isTerminal }) { editor in
-                        Button(editor.name) {
+                        Button {
                             editorManager.defaultEditorBundleId = editor.bundleId
+                        } label: {
+                            if let icon = editor.appIcon {
+                                Label {
+                                    Text(editor.name)
+                                } icon: {
+                                    Image(nsImage: icon)
+                                }
+                            } else {
+                                Text(editor.name)
+                            }
                         }
                     }
                 }
@@ -75,13 +98,14 @@ struct OpenInEditorMenu: View {
                 }
             } label: {
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 8, weight: .bold))
+                    .font(.system(size: 8, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 4.5)
                     .background(isMenuHovered ? Color.primary.opacity(0.10) : Color.clear)
             }
             .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
             .fixedSize()
             .onHover { isMenuHovered = $0 }
             .help("Choose editor or change default")
@@ -92,5 +116,6 @@ struct OpenInEditorMenu: View {
             RoundedRectangle(cornerRadius: 4)
                 .stroke(Color.primary.opacity(0.06), lineWidth: 1)
         )
+        .fixedSize()
     }
 }

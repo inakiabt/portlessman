@@ -273,7 +273,7 @@ public final class PortlessStore: ObservableObject {
                 self?.reload()
             }
         } else {
-            setStatus("Could not kill PID \(route.pid) (Permission denied)")
+            setStatus("Could not kill PID \(route.pidString) (Permission denied)")
         }
     }
 

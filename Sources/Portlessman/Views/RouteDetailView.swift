@@ -126,7 +126,7 @@ struct RouteDetailView: View {
                         detailRow(label: "Target Port", value: "localhost:\(route.port)")
 
                         if route.pid > 0 {
-                            detailRow(label: "Process PID", value: "\(route.pid) (\(route.isAlive ? "Running" : "Stale"))")
+                            detailRow(label: "Process PID", value: "\(route.pidString) (\(route.isAlive ? "Running" : "Stale"))")
                         }
 
                         detailRow(label: "Protocol", value: "HTTP/2 over TLS (HTTPS)")
@@ -200,7 +200,7 @@ struct RouteDetailView: View {
                             HStack(spacing: 5) {
                                 Image(systemName: "stop.circle.fill")
                                     .font(.system(size: 11))
-                                Text("Terminate Process (PID \(route.pid))")
+                                Text("Terminate Process (PID \(route.pidString))")
                                     .font(.system(size: 11, weight: .medium))
                             }
                             .padding(.horizontal, 10)

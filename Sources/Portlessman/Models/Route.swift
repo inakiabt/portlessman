@@ -27,6 +27,10 @@ public struct PortlessRoute: Identifiable, Hashable, Sendable {
     public var cwd: String?
     public var projectName: String
 
+    public var pidString: String {
+        String(pid)
+    }
+
     public var isAlive: Bool {
         guard pid > 0 else { return false }
         return ProcessManager.shared.isAlive(pid: pid)

@@ -8,6 +8,13 @@ public struct EditorApp: Identifiable, Hashable, Sendable {
     public let iconSystemName: String
     public let isTerminal: Bool
 
+    public var appIcon: NSImage? {
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) {
+            return NSWorkspace.shared.icon(forFile: url.path)
+        }
+        return nil
+    }
+
     public static let knownEditors: [EditorApp] = [
         EditorApp(bundleId: "com.apple.finder", name: "Finder", iconSystemName: "folder", isTerminal: false),
         EditorApp(bundleId: "com.jetbrains.WebStorm", name: "WebStorm", iconSystemName: "brain.head.profile", isTerminal: false),

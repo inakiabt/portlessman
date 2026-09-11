@@ -65,6 +65,9 @@ struct MenuContentView: View {
             }
             .opacity(0)
         )
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+            activeTab = .main
+        }
     }
 
     private var mainView: some View {

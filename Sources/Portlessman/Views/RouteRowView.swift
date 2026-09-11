@@ -9,7 +9,7 @@ struct RouteRowView: View {
     @State private var copiedFeedback = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 6) {
             // Top Row: Status Dot, Hostname, and Drill-down Chevron
             HStack(spacing: 6) {
                 Circle()
@@ -32,7 +32,7 @@ struct RouteRowView: View {
                 onSelect()
             }
 
-            // Bottom Row: Primary Actions (Open, Editor, Copy URL) + Clickable empty area
+            // Bottom Row: Primary Actions (Open, Editor, Copy URL)
             HStack(spacing: 6) {
                 // Open in Browser
                 Button {
@@ -83,13 +83,7 @@ struct RouteRowView: View {
                 .buttonStyle(.plain)
                 .help("Copy URL to clipboard")
 
-                // Empty space in button bar also opens the detail
-                Spacer(minLength: 8)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        onSelect()
-                    }
+                Spacer(minLength: 0)
             }
         }
         .padding(.horizontal, 10)
@@ -139,7 +133,7 @@ struct RouteRowView: View {
             }
             if route.pid > 0 {
                 Divider()
-                Button("Terminate Process (PID \(route.pid))", role: .destructive) {
+                Button("Terminate Process (PID \(route.pidString))", role: .destructive) {
                     store.killProcess(for: route)
                 }
             }
