@@ -21,6 +21,9 @@ struct LogsModalView: View {
                             .font(.system(size: 12))
                     }
                     .foregroundStyle(.secondary)
+                    .padding(.vertical, 4)
+                    .padding(.trailing, 8)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
