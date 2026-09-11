@@ -28,7 +28,7 @@ public struct ScreenshotRenderer {
 
         renderViewToPng(
             view: mainView,
-            fixedWidth: 384,
+            fixedWidth: 414,
             waitSec: 0.2,
             file: outputDir.appendingPathComponent("main_view.png")
         )
@@ -48,7 +48,7 @@ public struct ScreenshotRenderer {
 
             renderViewToPng(
                 view: detailView,
-                fixedWidth: 404,
+                fixedWidth: 414,
                 waitSec: 0.2,
                 file: outputDir.appendingPathComponent("route_detail.png")
             )
@@ -67,7 +67,7 @@ public struct ScreenshotRenderer {
 
         renderViewToPng(
             view: settingsView,
-            fixedWidth: 384,
+            fixedWidth: 414,
             waitSec: 0.2,
             file: outputDir.appendingPathComponent("settings_view.png")
         )
@@ -85,7 +85,7 @@ public struct ScreenshotRenderer {
 
         renderViewToPng(
             view: doctorView,
-            fixedWidth: 384,
+            fixedWidth: 414,
             waitSec: 2.0,
             file: outputDir.appendingPathComponent("doctor_view.png")
         )
