@@ -11,6 +11,12 @@ cask "portlessman" do
 
   app "Portlessman.app"
 
+  postflight do
+    system_command "/usr/bin/xattr",
+                   args: ["-cr", "#{appdir}/Portlessman.app"],
+                   sudo: false
+  end
+
   zap trash: [
     "~/.portless",
     "~/Library/Preferences/sh.portlessman.app.plist",

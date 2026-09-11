@@ -10,6 +10,7 @@ enum ActiveTab: Equatable {
 }
 
 struct WindowVisibilityTracker: NSViewRepresentable {
+    let activeTab: ActiveTab
     let onDismiss: () -> Void
 
     func makeNSView(context: Context) -> WindowTrackerNSView {
@@ -20,6 +21,7 @@ struct WindowVisibilityTracker: NSViewRepresentable {
 
     func updateNSView(_ nsView: WindowTrackerNSView, context: Context) {
         nsView.onDismiss = onDismiss
+        nsView.resizeWindowToFit()
     }
 }
 
@@ -27,7 +29,30 @@ final class WindowTrackerNSView: NSView {
     var onDismiss: (() -> Void)?
     private var observers: [NSObjectProtocol] = []
 
+    func resizeWindowToFit() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let window = self.window,
+                  let contentView = window.contentView else { return }
+
+            contentView.layoutSubtreeIfNeeded()
+            let fitting = contentView.fittingSize
+            guard fitting.height > 60, fitting.width > 60 else { return }
+
+            var frame = window.frame
+            if abs(frame.height - fitting.height) > 1 {
+                let diffY = fitting.height - frame.height
+                frame.origin.y -= diffY
+                frame.size.height = fitting.height
+                frame.size.width = fitting.width
+                window.setFrame(frame, display: true, animate: false)
+            }
+        }
+    }
+
     override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        resizeWindowToFit()
         super.viewDidMoveToWindow()
         clearObservers()
 
@@ -92,35 +117,35 @@ struct MenuContentView: View {
             switch activeTab {
             case .main:
                 mainView
-                    .frame(width: 360)
+                    .frame(width: 390)
             case .doctor:
                 DoctorModalView(onBack: {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         activeTab = .main
                     }
                 })
-                .frame(width: 360)
+                .frame(width: 390)
             case .logs:
                 LogsModalView(store: store, onBack: {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         activeTab = .main
                     }
                 })
-                .frame(width: 360)
+                .frame(width: 390)
             case .settings:
                 SettingsView(store: store, onBack: {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         activeTab = .main
                     }
                 })
-                .frame(width: 360)
+                .frame(width: 390)
             case .routeDetail(let route):
                 RouteDetailView(route: route, store: store, onBack: {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         activeTab = .main
                     }
                 })
-                .frame(width: 380)
+                .frame(width: 390)
             }
         }
         .background(
@@ -140,7 +165,7 @@ struct MenuContentView: View {
             .opacity(0)
         )
         .background(
-            WindowVisibilityTracker {
+            WindowVisibilityTracker(activeTab: activeTab) {
                 activeTab = .main
             }
         )
