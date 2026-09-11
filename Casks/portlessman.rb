@@ -4,10 +4,10 @@ cask "portlessman" do
 
   url "https://github.com/inakiabt/portlessman/releases/download/v#{version}/Portlessman-#{version}.zip"
   name "Portlessman"
-  desc "Native macOS menu bar app for administering and monitoring Portless"
+  desc "Menu bar app for administering and monitoring Portless"
   homepage "https://github.com/inakiabt/portlessman"
 
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   app "Portlessman.app"
 
