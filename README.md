@@ -3,19 +3,35 @@
 A lightweight, native macOS menu bar application built with Swift and SwiftUI to administer, monitor, and configure [Portless](https://github.com/vercel-labs/portless) (`@vercel-labs/portless`).
 
 ![macOS 14+](https://img.shields.io/badge/macOS-14.0%2B-blue)
-![Swift 5.9+](https://img.shields.io/badge/Swift-5.9%2B-orange)
+![Swift 6](https://img.shields.io/badge/Swift-6.0-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/main_view.png" width="360" alt="Portlessman Main Routes List" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshots/route_detail.png" width="380" alt="Portlessman Route Details" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/doctor_view.png" width="360" alt="Portlessman Doctor Diagnostics" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshots/settings_view.png" width="360" alt="Portlessman Preferences" />
+</p>
 
 ---
 
 ## Features
 
-- **MenuBar Extra (`.window` style)**: Lives discreetly in your menu bar with real-time status and active routes badge. No Dock clutter (`LSUIElement`).
+- **MenuBar Extra (`.window` style)**: Lives discreetly in your menu bar with real-time proxy status, active routes count, and zero Dock clutter (`LSUIElement`).
 - **Sub-millisecond Real-Time Watching**: Monitors `~/.portless/routes.json` via native `DispatchSourceFileSystemObject` kqueue events without polling battery drain.
 - **Project Folder & Editor Integration**:
   - Automatically resolves each active route's current working directory (`cwd`) via `lsof`.
   - Dynamically discovers installed editors: **WebStorm**, **Visual Studio Code**, **Cursor**, **Zed**, **Sublime Text**, **Ghostty**, **iTerm2**, and **Finder**.
-  - One-click open in your default editor or choose from a dropdown.
+  - One-click open in your default editor via native split button or pick another editor from the dropdown.
 - **Route Administration**:
   - Direct browser launch (`open https://<hostname>`).
   - Copy local URL, Tailscale, or ngrok URLs.

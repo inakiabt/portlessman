@@ -5,6 +5,13 @@ import AppKit
 struct PortlessmanApp: App {
     @StateObject private var store = PortlessStore.shared
 
+    init() {
+        if CommandLine.arguments.contains("--render-screenshots") {
+            ScreenshotRenderer.renderAll()
+            exit(0)
+        }
+    }
+
     var body: some Scene {
         MenuBarExtra {
             MenuContentView()
