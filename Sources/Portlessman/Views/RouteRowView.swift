@@ -46,12 +46,8 @@ struct RouteRowView: View {
                         Text("Open")
                             .font(.system(size: 11, weight: .medium))
                     }
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3.5)
-                    .background(Color.primary.opacity(0.06))
-                    .cornerRadius(4)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ActionPillButtonStyle())
                 .help("Open in default browser")
 
                 // Open in Editor (Split Button: 1-click default, arrow for picker)
@@ -75,12 +71,8 @@ struct RouteRowView: View {
                         Text(copiedFeedback ? "Copied" : "URL")
                             .font(.system(size: 11, weight: .medium))
                     }
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3.5)
-                    .background(Color.primary.opacity(0.06))
-                    .cornerRadius(4)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ActionPillButtonStyle())
                 .help("Copy URL to clipboard")
 
                 Spacer(minLength: 0)

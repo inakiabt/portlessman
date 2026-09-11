@@ -23,10 +23,9 @@ struct HeaderView: View {
                 } label: {
                     Image(systemName: "gearshape")
                         .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.plain)
-                .help("Settings")
+                .buttonStyle(HeaderIconButtonStyle())
+                .help("Preferences...")
             }
 
             HStack {

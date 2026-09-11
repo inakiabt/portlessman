@@ -29,12 +29,8 @@ struct AliasSectionView: View {
                             Text("Add")
                                 .font(.system(size: 10, weight: .medium))
                         }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.primary.opacity(0.05))
-                        .cornerRadius(4)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(ActionPillButtonStyle())
                 }
             }
             .padding(.horizontal, 14)
@@ -69,9 +65,8 @@ struct AliasSectionView: View {
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.system(size: 11))
-                                    .foregroundStyle(.secondary)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(HeaderIconButtonStyle())
                             .help("Remove alias")
                         }
                         .padding(.horizontal, 12)
