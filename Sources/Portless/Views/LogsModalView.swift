@@ -3,38 +3,74 @@ import AppKit
 
 struct LogsModalView: View {
     @ObservedObject var store: PortlessStore
-    @Environment(\.dismiss) private var dismiss
+    let onBack: () -> Void
     @State private var logContent: String = ""
+    @State private var copiedFeedback: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
+            // Navigation Bar
             HStack {
-                Label("Proxy Logs", systemImage: "doc.plaintext")
-                    .font(.headline)
+                Button {
+                    onBack()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text("Back")
+                            .font(.system(size: 12))
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
 
                 Spacer()
 
-                Button {
-                    refreshLogs()
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 11))
+                HStack(spacing: 5) {
+                    Image(systemName: "doc.plaintext")
+                        .font(.system(size: 12))
+                    Text("Proxy Logs")
+                        .font(.system(size: 13, weight: .bold))
                 }
-                .buttonStyle(.plain)
 
-                Button("Copy") {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(logContent, forType: .string)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
+                Spacer()
 
-                Button("Done") {
-                    dismiss()
+                HStack(spacing: 8) {
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(logContent, forType: .string)
+                        copiedFeedback = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                            copiedFeedback = false
+                        }
+                    } label: {
+                        HStack(spacing: 3) {
+                            Image(systemName: copiedFeedback ? "checkmark" : "doc.on.doc")
+                                .font(.system(size: 9))
+                            Text(copiedFeedback ? "Copied" : "Copy")
+                                .font(.system(size: 10))
+                        }
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.primary.opacity(0.06))
+                        .cornerRadius(4)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        refreshLogs()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
             }
+            .padding(.horizontal, 14)
+            .padding(.top, 10)
+            .padding(.bottom, 4)
 
             Divider()
 
@@ -43,15 +79,15 @@ struct LogsModalView: View {
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(8)
+                    .padding(10)
                     .textSelection(.enabled)
             }
-            .background(Color.primary.opacity(0.04))
+            .background(Color.primary.opacity(0.03))
             .cornerRadius(6)
+            .padding(.horizontal, 14)
             .frame(height: 280)
         }
-        .padding(16)
-        .frame(width: 480)
+        .padding(.bottom, 10)
         .onAppear {
             refreshLogs()
         }

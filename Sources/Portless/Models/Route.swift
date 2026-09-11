@@ -24,12 +24,12 @@ public struct PortlessRoute: Identifiable, Hashable, Sendable {
     public let url: String
     public let tailscaleUrl: String?
     public let ngrokUrl: String?
-    public let cwd: String?
-    public let projectName: String
+    public var cwd: String?
+    public var projectName: String
 
     public var isAlive: Bool {
         guard pid > 0 else { return false }
-        return kill(Int32(pid), 0) == 0
+        return ProcessManager.shared.isAlive(pid: pid)
     }
 
     public var isStaticAlias: Bool {

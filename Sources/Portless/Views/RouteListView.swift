@@ -37,25 +37,36 @@ struct RouteListView: View {
             if store.activeAppRoutes.isEmpty {
                 VStack(spacing: 8) {
                     Image(systemName: "network.slash")
-                        .font(.system(size: 24))
+                        .font(.system(size: 20))
                         .foregroundStyle(.secondary.opacity(0.6))
 
                     Text("No active routes")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
 
                     Text("Run portless <cmd> in any project directory")
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
+                .padding(.vertical, 16)
             } else {
-                VStack(spacing: 4) {
-                    ForEach(store.activeAppRoutes) { route in
-                        RouteRowView(route: route, store: store)
+                if store.activeAppRoutes.count <= 4 {
+                    VStack(spacing: 4) {
+                        ForEach(store.activeAppRoutes) { route in
+                            RouteRowView(route: route, store: store)
+                        }
                     }
+                } else {
+                    ScrollView {
+                        VStack(spacing: 4) {
+                            ForEach(store.activeAppRoutes) { route in
+                                RouteRowView(route: route, store: store)
+                            }
+                        }
+                    }
+                    .frame(height: 300)
                 }
             }
         }

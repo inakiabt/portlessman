@@ -3,7 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var store: PortlessStore
     @ObservedObject private var editorManager = EditorManager.shared
-    @Environment(\.dismiss) private var dismiss
+    let onBack: () -> Void
 
     @State private var isServiceInstalled: Bool = false
     @State private var isLANMode: Bool = false
@@ -11,106 +11,133 @@ struct SettingsView: View {
     @State private var feedbackMessage: String? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 10) {
+            // Navigation Bar
             HStack {
-                Label("Settings", systemImage: "gearshape")
-                    .font(.headline)
+                Button {
+                    onBack()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text("Back")
+                            .font(.system(size: 12))
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
 
                 Spacer()
 
-                Button("Done") {
-                    dismiss()
+                HStack(spacing: 5) {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 12))
+                    Text("Preferences")
+                        .font(.system(size: 13, weight: .bold))
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
+
+                Spacer()
+
+                // Spacer to balance the back button width
+                Text("Back")
+                    .font(.system(size: 12))
+                    .opacity(0)
             }
+            .padding(.horizontal, 14)
+            .padding(.top, 10)
+            .padding(.bottom, 4)
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 14) {
-                // Section: Editor
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("DEFAULT PROJECT EDITOR")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.secondary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    // Section: Editor
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("DEFAULT PROJECT EDITOR")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.secondary)
 
-                    Picker("Editor", selection: $editorManager.defaultEditorBundleId) {
-                        ForEach(editorManager.installedEditors) { editor in
-                            Text(editor.name).tag(editor.bundleId)
+                        Picker("Editor", selection: $editorManager.defaultEditorBundleId) {
+                            ForEach(editorManager.installedEditors) { editor in
+                                Text(editor.name).tag(editor.bundleId)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+
+                        Text("Clicking the editor button on a route opens this app.")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    Divider()
+
+                    // Section: Proxy Service
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("STARTUP & SERVICE")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.secondary)
+
+                        Toggle("Start proxy automatically on macOS boot", isOn: $isServiceInstalled)
+                            .onChange(of: isServiceInstalled) { _, newValue in
+                                toggleService(install: newValue)
+                            }
+                            .font(.system(size: 12))
+                            .disabled(isBusy)
+
+                        Text("Installs a LaunchDaemon in /Library/LaunchDaemons/sh.portless.proxy.plist")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    Divider()
+
+                    // Section: Network & Security
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("NETWORK & SYSTEM")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.secondary)
+
+                        Toggle("LAN Mode (mDNS .local for testing on mobile)", isOn: $isLANMode)
+                            .onChange(of: isLANMode) { _, newValue in
+                                toggleLAN(enabled: newValue)
+                            }
+                            .font(.system(size: 12))
+                            .disabled(isBusy)
+
+                        HStack(spacing: 8) {
+                            Button("Sync /etc/hosts") {
+                                runHostsSync()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .disabled(isBusy)
+                            .help("Adds routes to /etc/hosts (fixes Safari resolution)")
+
+                            Button("Trust Local CA") {
+                                runTrustCA()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .disabled(isBusy)
+                            .help("Adds local Portless CA to Keychain trust store")
                         }
                     }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
 
-                    Text("Clicking the editor button on a route will open the project in this app.")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                }
-
-                Divider()
-
-                // Section: Proxy Service
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("STARTUP & SERVICE")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.secondary)
-
-                    Toggle("Start proxy automatically on macOS boot", isOn: $isServiceInstalled)
-                        .onChange(of: isServiceInstalled) { _, newValue in
-                            toggleService(install: newValue)
-                        }
-                        .font(.system(size: 12))
-                        .disabled(isBusy)
-
-                    Text("Installs a LaunchDaemon in /Library/LaunchDaemons/sh.portless.proxy.plist")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                }
-
-                Divider()
-
-                // Section: Network & Security
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("NETWORK & SYSTEM")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.secondary)
-
-                    Toggle("LAN Mode (mDNS .local for testing on mobile)", isOn: $isLANMode)
-                        .onChange(of: isLANMode) { _, newValue in
-                            toggleLAN(enabled: newValue)
-                        }
-                        .font(.system(size: 12))
-                        .disabled(isBusy)
-
-                    HStack(spacing: 8) {
-                        Button("Sync /etc/hosts") {
-                            runHostsSync()
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                        .disabled(isBusy)
-                        .help("Adds routes to /etc/hosts (fixes Safari resolution)")
-
-                        Button("Trust Local CA") {
-                            runTrustCA()
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                        .disabled(isBusy)
-                        .help("Adds local Portless CA to Keychain trust store")
+                    if let msg = feedbackMessage {
+                        Text(msg)
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.blue)
+                            .padding(.top, 2)
                     }
                 }
-
-                if let msg = feedbackMessage {
-                    Text(msg)
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.blue)
-                        .padding(.top, 4)
-                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 4)
             }
+            .frame(height: 280)
         }
-        .padding(16)
-        .frame(width: 360)
+        .padding(.bottom, 10)
         .onAppear {
             self.isLANMode = store.proxyStatus.isLAN
             checkServiceStatus()

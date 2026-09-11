@@ -1,16 +1,37 @@
 import SwiftUI
 
 struct DoctorModalView: View {
-    @Environment(\.dismiss) private var dismiss
+    let onBack: () -> Void
     @State private var report: DoctorReport? = nil
     @State private var isLoading: Bool = true
     @State private var errorText: String? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
+            // Navigation Bar
             HStack {
-                Label("Portless Doctor", systemImage: "stethoscope")
-                    .font(.headline)
+                Button {
+                    onBack()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text("Back")
+                            .font(.system(size: 12))
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
+
+                Spacer()
+
+                HStack(spacing: 5) {
+                    Image(systemName: "stethoscope")
+                        .font(.system(size: 12))
+                    Text("Portless Doctor")
+                        .font(.system(size: 13, weight: .bold))
+                }
 
                 Spacer()
 
@@ -19,52 +40,54 @@ struct DoctorModalView: View {
                 } label: {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
                 .disabled(isLoading)
-
-                Button("Done") {
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
+                .help("Rerun doctor diagnostics")
             }
+            .padding(.horizontal, 14)
+            .padding(.top, 10)
+            .padding(.bottom, 4)
 
             Divider()
 
             if isLoading {
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     ProgressView()
+                        .controlSize(.small)
                     Text("Running diagnostics...")
-                        .font(.caption)
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
-                .frame(maxWidth: .infinity, minHeight: 180)
+                .frame(maxWidth: .infinity, minHeight: 200)
             } else if let error = errorText {
                 VStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle")
-                        .font(.title2)
+                        .font(.title3)
                         .foregroundStyle(Color.red)
-                    Text("Failed to run doctor")
-                        .font(.headline)
+                    Text("Diagnostics failed")
+                        .font(.system(size: 12, weight: .semibold))
                     Text(error)
-                        .font(.caption)
+                        .font(.system(size: 10))
                         .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
                 }
-                .frame(maxWidth: .infinity, minHeight: 180)
+                .frame(maxWidth: .infinity, minHeight: 200)
             } else if let report = report {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 8) {
                         // Environment Info
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(alignment: .leading, spacing: 2) {
                             if let v = report.version {
-                                Text("Portless v\(v)").font(.caption.bold())
+                                Text("Portless v\(v)").font(.system(size: 11, weight: .bold))
                             }
                             if let node = report.nodeVersion {
-                                Text("Node.js: \(node)").font(.caption).foregroundStyle(.secondary)
+                                Text("Node.js: \(node)").font(.system(size: 10)).foregroundStyle(.secondary)
                             }
                             if let mode = report.mode {
-                                Text("Mode: \(mode)").font(.caption).foregroundStyle(.secondary)
+                                Text("Mode: \(mode)").font(.system(size: 10)).foregroundStyle(.secondary)
                             }
                         }
                         .padding(8)
@@ -79,10 +102,12 @@ struct DoctorModalView: View {
                                     Image(systemName: iconName(for: item.level))
                                         .font(.system(size: 11, weight: .bold))
                                         .foregroundStyle(iconColor(for: item.level))
+                                        .padding(.top, 1)
 
                                     Text(item.message)
                                         .font(.system(size: 11))
                                         .foregroundStyle(.primary)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
                             }
                         }
@@ -90,17 +115,17 @@ struct DoctorModalView: View {
 
                         if let summary = report.summary {
                             Text(summary)
-                                .font(.caption.bold())
+                                .font(.system(size: 11, weight: .bold))
                                 .foregroundStyle(Color.green)
-                                .padding(.top, 4)
+                                .padding(.top, 2)
                         }
                     }
+                    .padding(.horizontal, 14)
                 }
-                .frame(maxHeight: 280)
+                .frame(height: 280)
             }
         }
-        .padding(16)
-        .frame(width: 380)
+        .padding(.bottom, 10)
         .onAppear {
             loadReport()
         }

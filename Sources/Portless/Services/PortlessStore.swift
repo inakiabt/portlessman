@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import AppKit
+import Darwin
 
 @MainActor
 public final class PortlessStore: ObservableObject {
@@ -71,7 +72,11 @@ public final class PortlessStore: ObservableObject {
         let activePids = Set(entries.map(\.pid).filter { $0 > 0 })
         ProcessManager.shared.purgeStalePids(activePids)
 
-        self.routes = entries.map { entry in
+        // 1. Initial mapping using cached cwds
+        var initialRoutes: [PortlessRoute] = []
+        var pidsToResolve: [Int] = []
+
+        for entry in entries {
             let url: String
             if port == 443 || port == 80 {
                 url = "\(scheme)://\(entry.hostname)"
@@ -79,28 +84,76 @@ public final class PortlessStore: ObservableObject {
                 url = "\(scheme)://\(entry.hostname):\(port)"
             }
 
-            let cwd = ProcessManager.shared.resolveCwd(forPid: entry.pid)
-            return PortlessRoute(
-                hostname: entry.hostname,
-                port: entry.port,
-                pid: entry.pid,
-                url: url,
-                tailscaleUrl: entry.tailscaleUrl,
-                ngrokUrl: entry.ngrokUrl,
-                cwd: cwd
-            )
-        }.sorted { $0.hostname < $1.hostname }
+            let cachedCwd = ProcessManager.shared.resolveCwd(forPid: entry.pid)
+            if cachedCwd == nil && entry.pid > 0 {
+                pidsToResolve.append(entry.pid)
+            }
 
+            initialRoutes.append(
+                PortlessRoute(
+                    hostname: entry.hostname,
+                    port: entry.port,
+                    pid: entry.pid,
+                    url: url,
+                    tailscaleUrl: entry.tailscaleUrl,
+                    ngrokUrl: entry.ngrokUrl,
+                    cwd: cachedCwd
+                )
+            )
+        }
+
+        self.routes = initialRoutes.sorted { $0.hostname < $1.hostname }
+
+        // 2. Check proxy state via PID and TCP socket
         let pid = readProxyPid()
-        let isAlive = pid != nil && ProcessManager.shared.isAlive(pid: pid!)
+        let isPidAlive = pid != nil && ProcessManager.shared.isAlive(pid: pid!)
+        let isPortAlive = checkPortResponding(port: port)
+        let isProxyRunning = isPortAlive || isPidAlive
 
         self.proxyStatus = ProxyStatus(
-            isRunning: isAlive,
+            isRunning: isProxyRunning,
             port: port,
             pid: pid,
             isTLS: isTLS,
             isLAN: FileManager.default.fileExists(atPath: proxyLanFile.path)
         )
+
+        // 3. Resolve any uncached cwds in the background
+        if !pidsToResolve.isEmpty {
+            ProcessManager.shared.resolveCwdAsync(forPids: pidsToResolve) { [weak self] resolvedMap in
+                Task { @MainActor in
+                    guard let self = self, !resolvedMap.isEmpty else { return }
+                    self.routes = self.routes.map { r in
+                        if let newCwd = resolvedMap[r.pid] {
+                            var updated = r
+                            updated.cwd = newCwd
+                            updated.projectName = URL(fileURLWithPath: newCwd).lastPathComponent
+                            return updated
+                        }
+                        return r
+                    }
+                }
+            }
+        }
+    }
+
+    private func checkPortResponding(port: Int, host: String = "127.0.0.1") -> Bool {
+        var hints = addrinfo()
+        hints.ai_family = AF_INET
+        hints.ai_socktype = SOCK_STREAM
+        var res: UnsafeMutablePointer<addrinfo>?
+        guard getaddrinfo(host, "\(port)", &hints, &res) == 0, let info = res else { return false }
+        defer { freeaddrinfo(res) }
+
+        let sock = socket(info.pointee.ai_family, info.pointee.ai_socktype, info.pointee.ai_protocol)
+        guard sock >= 0 else { return false }
+        defer { close(sock) }
+
+        var tv = timeval(tv_sec: 0, tv_usec: 250_000)
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+        setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+
+        return connect(sock, info.pointee.ai_addr, info.pointee.ai_addrlen) == 0
     }
 
     private func loadRawRouteEntries() -> [RouteEntry] {
@@ -145,7 +198,7 @@ public final class PortlessStore: ObservableObject {
                 } else {
                     try await PortlessCLI.shared.startProxy()
                 }
-                try await Task.sleep(nanoseconds: 500_000_000)
+                try await Task.sleep(nanoseconds: 600_000_000)
                 reload()
             } catch {
                 statusMessage = "Proxy error: \(error.localizedDescription)"

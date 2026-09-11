@@ -1,44 +1,76 @@
 import SwiftUI
 import AppKit
 
+enum ActiveTab: Equatable {
+    case main
+    case doctor
+    case logs
+    case settings
+}
+
 struct MenuContentView: View {
     @ObservedObject var store = PortlessStore.shared
-    @State private var showingDoctor = false
-    @State private var showingLogs = false
-    @State private var showingSettings = false
+    @State private var activeTab: ActiveTab = .main
 
     var body: some View {
+        Group {
+            switch activeTab {
+            case .main:
+                mainView
+            case .doctor:
+                DoctorModalView(onBack: {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        activeTab = .main
+                    }
+                })
+            case .logs:
+                LogsModalView(store: store, onBack: {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        activeTab = .main
+                    }
+                })
+            case .settings:
+                SettingsView(store: store, onBack: {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        activeTab = .main
+                    }
+                })
+            }
+        }
+        .frame(width: 360)
+    }
+
+    private var mainView: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HeaderView(store: store) {
-                showingSettings = true
-            }
-
-            Divider()
-
-            // Scrollable Content
-            ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    // Active Routes Section
-                    RouteListView(store: store)
-
-                    Divider()
-                        .padding(.horizontal, 14)
-
-                    // Static Aliases Section
-                    AliasSectionView(store: store)
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    activeTab = .settings
                 }
-                .padding(.vertical, 6)
             }
-            .frame(maxHeight: 380)
 
             Divider()
 
-            // Footer Actions
-            VStack(alignment: .leading, spacing: 3) {
+            // Active Routes
+            RouteListView(store: store)
+
+            Divider()
+                .padding(.horizontal, 14)
+                .padding(.top, 4)
+
+            // Static Aliases
+            AliasSectionView(store: store)
+
+            Divider()
+                .padding(.top, 6)
+
+            // Navigation & Footer
+            VStack(alignment: .leading, spacing: 1) {
                 // Doctor Button
                 Button {
-                    showingDoctor = true
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        activeTab = .doctor
+                    }
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "stethoscope")
@@ -53,14 +85,16 @@ struct MenuContentView: View {
                             .foregroundStyle(.tertiary)
                     }
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 5)
+                    .padding(.vertical, 6)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
 
                 // Proxy Logs Button
                 Button {
-                    showingLogs = true
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        activeTab = .logs
+                    }
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "doc.plaintext")
@@ -75,7 +109,7 @@ struct MenuContentView: View {
                             .foregroundStyle(.tertiary)
                     }
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 5)
+                    .padding(.vertical, 6)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -83,12 +117,14 @@ struct MenuContentView: View {
                 Divider()
                     .padding(.vertical, 2)
 
-                // Preferences and Quit
+                // Preferences & Quit
                 HStack {
                     Button {
-                        showingSettings = true
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            activeTab = .settings
+                        }
                     } label: {
-                        HStack(spacing: 5) {
+                        HStack(spacing: 4) {
                             Image(systemName: "gearshape")
                                 .font(.system(size: 11))
                             Text("Preferences...")
@@ -112,18 +148,8 @@ struct MenuContentView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 6)
             }
-            .padding(.top, 4)
+            .padding(.top, 2)
             .background(Color.primary.opacity(0.02))
-        }
-        .frame(width: 360)
-        .sheet(isPresented: $showingDoctor) {
-            DoctorModalView()
-        }
-        .sheet(isPresented: $showingLogs) {
-            LogsModalView(store: store)
-        }
-        .sheet(isPresented: $showingSettings) {
-            SettingsView(store: store)
         }
     }
 }
