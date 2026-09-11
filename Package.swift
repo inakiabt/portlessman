@@ -2,22 +2,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "PortlessApp",
+    name: "Portlessman",
     platforms: [
         .macOS(.v14)
     ],
     products: [
         .executable(
-            name: "Portless",
-            targets: ["Portless"]
+            name: "Portlessman",
+            targets: ["Portlessman"]
         )
     ],
     dependencies: [],
     targets: [
         .executableTarget(
-            name: "Portless",
+            name: "Portlessman",
             dependencies: [],
-            path: "Sources/Portless"
+            path: "Sources/Portlessman"
         )
     ]
 )

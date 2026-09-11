@@ -1,4 +1,4 @@
-# Portless macOS Menu Bar App
+# Portlessman
 
 A lightweight, native macOS menu bar application built with Swift and SwiftUI to administer, monitor, and configure [Portless](https://github.com/vercel-labs/portless) (`@vercel-labs/portless`).
 
@@ -62,7 +62,7 @@ make install
 ```bash
 make build
 # The standalone application bundle is generated at:
-# build/Portless.app
+# build/Portlessman.app
 ```
 
 ---

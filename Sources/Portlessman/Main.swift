@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct PortlessApp: App {
+struct PortlessmanApp: App {
     @StateObject private var store = PortlessStore.shared
 
     var body: some Scene {

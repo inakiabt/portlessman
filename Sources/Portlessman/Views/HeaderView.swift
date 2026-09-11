@@ -12,7 +12,7 @@ struct HeaderView: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(store.proxyStatus.isRunning ? Color.yellow : Color.secondary)
 
-                    Text("Portless")
+                    Text("Portlessman")
                         .font(.system(size: 15, weight: .bold))
                 }
 

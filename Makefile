@@ -1,4 +1,4 @@
-APP_NAME = Portless
+APP_NAME = Portlessman
 BUNDLE = build/$(APP_NAME).app
 INSTALL_DIR = /Applications
 
