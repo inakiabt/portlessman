@@ -11,10 +11,9 @@ cask "portlessman" do
 
   app "Portlessman.app"
 
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-cr", "#{appdir}/Portlessman.app"],
-                   sudo: false
+  postflight_steps do
+    run "/usr/bin/xattr",
+        args: ["-cr", "{{appdir}}/Portlessman.app"]
   end
 
   zap trash: [
