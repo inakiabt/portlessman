@@ -13,7 +13,8 @@ concurrency:
 jobs:
   validate:
     name: Build & Test
-    runs-on: macos-14
+    # Preserve the arm64 architecture of the existing release artifacts.
+    runs-on: macos-15
 
     steps:
       - name: Checkout repository
@@ -21,7 +22,9 @@ jobs:
 
       - name: Select Xcode
         run: |
-          sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode.app
+          test "$(uname -m)" = "arm64"
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+          xcodebuild -version
           swift --version
 
       - name: Run Unit Tests
@@ -32,6 +35,9 @@ jobs:
 
       - name: Bundle macOS Application
         run: ./scripts/bundle.sh
+
+      - name: Verify Binary Architecture
+        run: test "$(lipo -archs build/Portlessman.app/Contents/MacOS/Portlessman)" = "arm64"
 
       - name: Verify Code Signature
         run: |
